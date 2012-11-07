@@ -9,5 +9,5 @@ libconfigiso.a: src/contextiso.c
 clean:
 	rm libconfigiso.a
 
-test: test.c libconfigiso.a
-	g++ -o test test.c libconfigiso.a
+example: example.c libconfigiso.a
+	g++ -o example example.c libconfigiso.a

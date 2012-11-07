@@ -4,29 +4,38 @@
 -------------------------------------------------
 
  1. INTRODUCTION
+===================
 
-This library provides the bare minimum code that is required to create
-a valid ISO-9660 (CDFS) disk image.
-
-The disk will contain only one file, called 'CONTEXT.SH' and it's contents
-can be specified using the context_cd_create() function.
+This library provides the bare minimum code that is required to create a valid ISO-9660 (CDFS) disk image.
+The disk will contain only one file, called 'CONTEXT.SH' and it's contents can be specified using the build_simple_cdrom() function.
 
  2. KNOWN LIMITATIONS
+========================
 
 I remind again that this is just a tiny library to create contextualization CD-ROM images. 
-It is designed to have small footprint and being able to create ISOs with configuration information 
-that will not exceed 2KiB. Therefore there are many limitations. For example, this library:
+It is designed to have small footprint and being able to create ISOs with configuration information that will not exceed 2KiB. Therefore there are many limitations. For example:
 
- * Can create CD-ROMs with *only* 1 file
- * The maximum file size 2048 characters
- * The maximum filename length is 12 characters (DOS 8+3)
+ * This library can create CD-ROMs with *only* 1 file
+ * The maximum supported file size 2048 characters
+ * The maximum supported filename length is 12 characters (DOS 8+3)
+ * This library does not update the creation, modification, expiration and effective date of the built image (yet).
+ * The final image is based on a template iso built by mkisofs.
 
  3. USAGE
+===========
 
 To build the static library 'libcontextiso.a' simply type : make
-You can find the exposed functions in include/contextiso.h
+To use this library, include the header 'include/contextiso.h' and link your code against 'libcontextiso.a'. The exported functions are:
+
+ char * build_simple_cdrom( "volume_name", "file.name", "contents", contents_size );
+ char * build_context_cdrom( "contents of CONTEXT.SH" );
+
+Both functions return a string buffer with the contents of the CD-ROM image. The length of the returned buffer is CONTEXTISO_CDROM_SIZE bytes.
+
+For an example see 'example.c'. To build type : make example
 
  4. AUTHOR
+============
 
 Ioannis Charalampidis <ioannis.charalampidis[at)cern.ch>
 
