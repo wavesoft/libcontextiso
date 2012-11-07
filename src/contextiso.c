@@ -1,18 +1,25 @@
 
+#include <stdio.h>
+#include <time.h>
 #include <ctype.h>
 #include <string.h>
 #include "iso9660.h"
 
 // CD-ROM size for 2KiB of data
 static const int CONTEXTISO_CDROM_SIZE = 358400;
+const char * LIBCONTEXTISO_APP = "LIBCONTEXTISO - A TINY ISO 9660-COMPATIBLE FILESYSTEM CREATOR LIBRARY (C) 2012  I.CHARALAMPIDIS                                 ";
 
 /**
  * Hard-coded offsets
  */
 static const int PRIMARY_DESCRIPTOR_OFFSET          = 0x8000;
-static const int SECONDARY_DESCRIPTOR_OFFSET        = 0x8800;
 static const int SECONDARY_DIRECTORY_RECORD_OFFSET  = 0xB800;
 static const int CONTENTS_OFFSET                    = 0xC000;
+
+/**
+ * Some locally-used constants
+ */
+const char dateZero[] = { 0x30,0x30,0x30,0x30, 0x30,0x30, 0x30,0x30, 0x30,0x30, 0x30,0x30, 0x30,0x30, 0x30,0x30, 0x30 };
 
 /**
  * Update a long in ISO9660 pivot-endian representation
@@ -39,9 +46,32 @@ char * build_simple_cdrom( const char * volume_id, const char * filename, const 
     iso_primary_descriptor  descPrimary;
     iso_directory_record    descFile;
     int i;
+    time_t rawTimeNow;
+    struct tm * tmNow;
     
     // Copy defaults to the primary sector descriptor
+    memset(&descPrimary, 0, sizeof(descPrimary));
     memcpy(&descPrimary, &ISO9660_PRIMARY_DESCRIPTOR, sizeof(descPrimary));
+    
+    // Build the current date
+    char dateNow[17];
+    time(&rawTimeNow);
+    tmNow = gmtime(&rawTimeNow);
+    sprintf(&dateNow[0], "%04u%02u%02u%02u%02u%02u000", // <-- 0x30 ('0') is GMT Timezone
+            tmNow->tm_year + 1900,
+            tmNow->tm_mon,
+            tmNow->tm_mday,
+            tmNow->tm_hour,
+            tmNow->tm_min,
+            tmNow->tm_sec
+        );
+        
+    // Set date fields
+    memcpy(&descPrimary.creation_date[0], &dateNow[0], 17);
+    memcpy(&descPrimary.modification_date[0], &dateNow[0], 17);
+    memcpy(&descPrimary.effective_date[0], &dateNow[0], 17);
+    memcpy(&descPrimary.expiration_date[0], &dateZero[0], 17);
+    memcpy(&descPrimary.application_id, LIBCONTEXTISO_APP, 127);
     
     // Update volume_id on the primary sector
     int lVol = strlen(volume_id);
@@ -74,7 +104,9 @@ char * build_simple_cdrom( const char * volume_id, const char * filename, const 
     // Compose the CD-ROM Disk buffer
     memset(&bytes,0,CONTEXTISO_CDROM_SIZE);
     memcpy(&bytes[PRIMARY_DESCRIPTOR_OFFSET],           &descPrimary,               sizeof(descPrimary));
-    memcpy(&bytes[SECONDARY_DESCRIPTOR_OFFSET],         &ISO9660_SECONDARY,         sizeof(ISO9660_SECONDARY));
+    memcpy(&bytes[0x8800],                              &ISO9660_AT_8800,           sizeof(ISO9660_AT_8800));
+    memcpy(&bytes[0x9800],                              &ISO9660_AT_9800,           sizeof(ISO9660_AT_9800));
+    memcpy(&bytes[0xA800],                              &ISO9660_AT_A800,           sizeof(ISO9660_AT_A800));
     memcpy(&bytes[SECONDARY_DIRECTORY_RECORD_OFFSET],   &ISO9660_CONTEXT_SH_STRUCT, sizeof(ISO9660_CONTEXT_SH_STRUCT));
     memcpy(&bytes[SECONDARY_DIRECTORY_RECORD_OFFSET+68],&descFile,                  sizeof(descFile));
     memcpy(&bytes[CONTENTS_OFFSET],                     buffer,                     lDataSize);

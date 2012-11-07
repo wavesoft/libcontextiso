@@ -18,8 +18,6 @@ It is designed to have small footprint and being able to create ISOs with config
  * This library can create CD-ROMs with *only* 1 file
  * The maximum supported file size 2048 characters
  * The maximum supported filename length is 12 characters (DOS 8+3)
- * This library does not update the creation, modification, expiration and effective date of the built image (yet).
- * The final image is based on a template iso built by mkisofs.
 
  3. USAGE
 ===========
