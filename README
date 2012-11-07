@@ -1,0 +1,32 @@
+
+-------------------------------------------------
+ Tiny Contextualization CD-ROM Creation Library
+-------------------------------------------------
+
+ 1. INTRODUCTION
+
+This library provides the bare minimum code that is required to create
+a valid ISO-9660 (CDFS) disk image.
+
+The disk will contain only one file, called 'CONTEXT.SH' and it's contents
+can be specified using the context_cd_create() function.
+
+ 2. KNOWN LIMITATIONS
+
+I remind again that this is just a tiny library to create contextualization CD-ROM images. 
+It is designed to have small footprint and being able to create ISOs with configuration information 
+that will not exceed 2KiB. Therefore there are many limitations. For example, this library:
+
+ * Can create CD-ROMs with *only* 1 file
+ * The maximum file size 2048 characters
+ * The maximum filename length is 12 characters (DOS 8+3)
+
+ 3. USAGE
+
+To build the static library 'libcontextiso.a' simply type : make
+You can find the exposed functions in include/contextiso.h
+
+ 4. AUTHOR
+
+Ioannis Charalampidis <ioannis.charalampidis[at)cern.ch>
+
