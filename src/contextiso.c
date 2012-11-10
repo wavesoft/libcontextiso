@@ -42,22 +42,26 @@ void isosetl( int x, unsigned char buffer[]) {
 char * build_simple_cdrom( const char * volume_id, const char * filename, const char * buffer, int size ) {
     
     // Local variables
-    static char bytes[CONTEXTISO_CDROM_SIZE];
     iso_primary_descriptor  descPrimary;
     iso_directory_record    descFile;
     int i;
     time_t rawTimeNow;
     struct tm * tmNow;
     
-    // Copy defaults to the primary sector descriptor
+    // Prepare primary record
     memset(&descPrimary, 0, sizeof(descPrimary));
-    memcpy(&descPrimary, &ISO9660_PRIMARY_DESCRIPTOR, sizeof(descPrimary));
+    memset(&descPrimary.volume_set_id[0], 0x20, 1205); // Reaches till .unused5
+    memset(&descPrimary.file_structure_version[0], 1, 1);
+    memset(&descPrimary.unused4[0], 0, 1);
+    
+    // Copy defaults to the primary sector descriptor
+    memcpy(&descPrimary, &ISO9660_PRIMARY_DESCRIPTOR, sizeof(ISO9660_PRIMARY_DESCRIPTOR));
     
     // Build the current date
     char dateNow[17];
     time(&rawTimeNow);
     tmNow = gmtime(&rawTimeNow);
-    sprintf(&dateNow[0], "%04u%02u%02u%02u%02u%02u000", // <-- 0x30 ('0') is GMT Timezone
+    sprintf(&dateNow[0], "%04u%02u%02u%02u%02u%02u000", // <-- Last 0x30 ('0') is GMT Timezone
             tmNow->tm_year + 1900,
             tmNow->tm_mon,
             tmNow->tm_mday,
@@ -102,6 +106,7 @@ char * build_simple_cdrom( const char * volume_id, const char * filename, const 
     descFile.name[i+1]='1';
     
     // Compose the CD-ROM Disk buffer
+    static char bytes[CONTEXTISO_CDROM_SIZE];
     memset(&bytes,0,CONTEXTISO_CDROM_SIZE);
     memcpy(&bytes[PRIMARY_DESCRIPTOR_OFFSET],           &descPrimary,               sizeof(descPrimary));
     memcpy(&bytes[0x8800],                              &ISO9660_AT_8800,           sizeof(ISO9660_AT_8800));
